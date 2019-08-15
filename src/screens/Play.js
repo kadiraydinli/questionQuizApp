@@ -110,7 +110,7 @@ export class Play extends Component {
       io.removeListener('Scoreboard')
     }
     catch (error) {
-      Alert.alert('Error', error)
+      Alert.alert('Error', JSON.stringify(error))
     }
   }
 
@@ -149,7 +149,7 @@ export class Play extends Component {
     return (
       <View style={styles.root}>
         <StatusBar backgroundColor="#F9F9F9" barStyle="dark-content" />
-        <Image style={styles.questionImage} source={require('../assets/images/24924ea3960d0400d813850966445c2b9f17451d.png')} />
+        <Image style={styles.questionImage} source={{ uri: global.url + this.state.questionImage}} />
         <View style={styles.questionView}>
           <Svg viewBox={"-0 -0 349 203.6159086335475"} style={styles.questionSvg}>
             <Path

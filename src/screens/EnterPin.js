@@ -4,6 +4,7 @@ import { Button, Input } from 'react-native-elements';
 import ioApi from "../socket";
 
 let io = null;
+global.pin;
 
 export class EnterPin extends Component {
   static navigationOptions = {
@@ -32,8 +33,8 @@ export class EnterPin extends Component {
 
       io.on('join', (data) => {
         if (data.status) {
-          //this.setState({ pin: '' });
-          this.props.navigation.navigate('EnterUserName', { pin: this.state.pin });
+          global.pin=this.state.pin;
+          this.props.navigation.navigate('EnterUserName');
         }
         else
           Alert.alert("", "Pin bulunamadı");

@@ -1,5 +1,5 @@
 import React, { Component } from "react";
-import { StyleSheet, View, Image, Text, StatusBar, TouchableOpacity, ScrollView } from "react-native";
+import { StyleSheet, View, Image, Text, StatusBar, TouchableOpacity, ScrollView, Dimensions } from "react-native";
 import { Button } from "react-native-elements";
 import Icon from 'react-native-vector-icons/FontAwesome';
 
@@ -15,7 +15,7 @@ export class Description extends Component {
   }
 
   componentDidMount() {
-    alert(data.userImg)
+    //alert(data.userImg)
   }
 
   render() {
@@ -39,13 +39,13 @@ export class Description extends Component {
               <Text style={styles.userNick}>{data.username}</Text>
             </View>
             <View style={{ flexDirection:"row" }}>
-              <TouchableOpacity><Icon name="star" size={30} style={{ right: 10 }} /></TouchableOpacity>
-              <TouchableOpacity><Icon name="ellipsis-v" size={30} /></TouchableOpacity>
+              <TouchableOpacity><Icon name="star" size={30} /></TouchableOpacity>
+              <TouchableOpacity><Icon name="trash" size={30} style={{ marginLeft: 20 }} /></TouchableOpacity>
             </View>
           </View>
           <View style={{width:"90%", margin: 15}}>
-            <ScrollView style={{width:"100%", height: "29%"}}>
-            <Text style={{ fontFamily: "PoppinsLight" }}>
+            <ScrollView style={{width:"100%", height: "38%"}}>
+            <Text style={{ fontFamily: "PoppinsLight", fontSize: 17 }}>
               {data.description}
             </Text>
             </ScrollView>
@@ -76,7 +76,7 @@ const styles = StyleSheet.create({
     top: "3%"
   },
   title: {
-    fontSize: 33,
+    fontSize: 35,
     width: "90%",
     fontFamily: "PoppinsSemiBold"
   },
@@ -100,7 +100,7 @@ const styles = StyleSheet.create({
     backgroundColor: "gray"
   },
   userNick: {
-    fontSize: 17,
+    fontSize: 19.5,
     left: 15,
     fontFamily: "PoppinsMedium"
   },

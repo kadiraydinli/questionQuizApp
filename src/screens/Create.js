@@ -1,8 +1,18 @@
 import React, { Component } from "react";
-import { StyleSheet, View, Text, Image, StatusBar, TouchableOpacity, Dimensions, Alert, Switch } from "react-native";
-import AsyncStorage from '@react-native-community/async-storage';
-import { Input, Button } from 'react-native-elements';
-import PhotoUpload from 'react-native-photo-upload';
+import {
+  StyleSheet,
+  View,
+  Text,
+  Image,
+  StatusBar,
+  TouchableOpacity,
+  Dimensions,
+  Alert,
+  Switch
+} from "react-native";
+import AsyncStorage from "@react-native-community/async-storage";
+import { Input, Button } from "react-native-elements";
+import PhotoUpload from "react-native-photo-upload";
 import ioApi from "../socket";
 
 let io = null;
@@ -10,78 +20,89 @@ let io = null;
 export class Create extends Component {
   static navigationOptions = {
     header: null
-  }
+  };
 
   constructor(props) {
     super(props);
-    this.state = ({
-      quizId: '',
-      file: '',
-      token: '',
-      image: '',
+    this.state = {
+      quizId: "",
+      file: "",
+      token: "",
       isImageSelected: false,
-      picker: '',
-      switchValue: true,
-      title: '',
-      description: '',
+      picker: "",
+      visibleTo: true,
+      title: "",
+      description: "",
       question: []
-    });
+    };
   }
 
   async componentDidMount() {
     try {
-      io = ioApi('profile', await AsyncStorage.getItem('token'))
-      io.on('quizId', (quizId) => {
+      io = ioApi("profile", await AsyncStorage.getItem("token"));
+      io.on("quizId", quizId => {
         if (this.state.file) {
-          Superagent
-            .post('http://localhost:3000/api/upload')
-            .field('quizId', quizId)
-            .field('whereToIns', 'quiz')
-            .attach("theFile", this.state.file)
-            .end((err, result) => {
-              console.log(result);
+          let url = global.url + "api/uploadMobile";
+          let body = new FormData();
+          body.append("quizId", quizId);
+          body.append("whereToIns", "quiz");
+          body.append("theFile", {
+            uri: this.state.file.uri,
+            name: this.state.file.fileName,
+            filename: this.state.file.fileName,
+            type: "image/png"
+          });
+          body.append("Content-Type", "image/png");
+
+          fetch(url, {
+            method: "POST",
+            headers: {
+              "Content-Type": "multipart/form-data"
+            },
+            body: body
+          })
+            .then(res => {
+              res.ok
+                ? this.props.navigation.navigate("AddQuestion", { id: quizId })
+                : null;
             })
+            .catch(e => console.log(e))
+            .done();
         }
-        this.state.quizId = quizId
-        this.props.navigation.navigate('AddQuestion', {id: quizId})
       });
-      io.on('quizError', (error) => {
-        //Alert.alert("Error", error.message);
+      io.on("quizError", error => {
+        Alert.alert("Error", error.message);
       });
-    }
-    catch (error) {
+    } catch (error) {
       Alert.alert("Error", JSON.stringify(error));
     }
   }
 
   _getTokenStorage = async () => {
     try {
-      const value = await AsyncStorage.getItem('token');
-      if(value != null)
-        this.setState({ token: value });
-    }
-    catch (error) {
+      const value = await AsyncStorage.getItem("token");
+      if (value != null) this.setState({ token: value });
+    } catch (error) {
       Alert.alert("Error", JSON.stringify(error));
     }
-  }
+  };
 
   createButton() {
-    try{
-      if (this.state.title.trim() != '') {
-        io.emit('quizCreate', {
+    try {
+      if (this.state.title.trim() != "") {
+        io.emit("quizCreate", {
           title: this.state.title,
           description: this.state.description,
-          location: 'Earth',
-          language: 'Turkish',
+          location: "Earth",
+          language: "Turkish",
           question: this.state.question,
-          img: this.state.image
+          img: "",
+          visibleTo: this.state.visibleTo
         });
-      }
-      else {
+      } else {
         Alert.alert("Information", "Please enter title!");
       }
-    }
-    catch(error) {
+    } catch (error) {
       Alert.alert("Error", JSON.stringify(error));
     }
   }
@@ -89,20 +110,20 @@ export class Create extends Component {
   componentWillUnmount() {
     try {
       this.setState({
-        quizId: '',
-        file: '',
-        token: '',
-        image: '',
+        quizId: "",
+        file: "",
+        token: "",
+        image: "",
         isImageSelected: false,
-        picker: '',
-        title: '',
-        description: '',
+        picker: "",
+        visibleTo: true,
+        title: "",
+        description: "",
         question: []
       });
-      io.removeListener('quizId')
-      io.removeListener('quizError')
-    }
-    catch (error) {
+      io.removeListener("quizId");
+      io.removeListener("quizError");
+    } catch (error) {
       Alert.alert("Error", JSON.stringify(error));
     }
   }
@@ -117,39 +138,74 @@ export class Create extends Component {
           </TouchableOpacity>
         </View>
         <TouchableOpacity style={styles.addImage}>
-          <PhotoUpload onPhotoSelect={avatar => {
+          <PhotoUpload
+            onPhotoSelect={avatar => {
               if (avatar) {
-                this.setState({isImageSelected: true})
+                this.setState({
+                  isImageSelected: true
+                });
+              }
+            }}
+            onResponse={image => {
+              if (image) {
+                this.setState({ file: image });
               }
             }}>
-            <Image style={{
-                paddingVertical: 30, width: Dimensions.get('window').width, height: Dimensions.get('window').height/3 }}
-              resizeMode='cover' />
+            <Image
+              style={{
+                paddingVertical: 30,
+                width: Dimensions.get("window").width,
+                height: Dimensions.get("window").height / 3
+              }}
+              resizeMode="cover"
+            />
           </PhotoUpload>
-          {!this.state.isImageSelected ?
-            <Text style={{ ...styles.text, position: "absolute" }}>Tap to add cover images</Text> : null}
+          {!this.state.isImageSelected ? (
+            <Text style={{ ...styles.text, position: "absolute" }}>
+              Tap to add cover images
+            </Text>
+          ) : null}
         </TouchableOpacity>
-        <View style={{ width: "90%", marginTop: "-8%"}}>
-          <View style={{ flexDirection: "row", padding: 10, bottom: 10, alignItems: "center"}}>
-            <Switch style={{ transform: [{ scaleX: 1.3 }, { scaleY: 1.3 }] }}
-              value={this.state.switchValue}
+        <View style={{ width: "90%", marginTop: "-8%" }}>
+          <View
+            style={{
+              flexDirection: "row",
+              padding: 10,
+              bottom: 10,
+              alignItems: "center"
+            }}>
+            <Switch
+              style={{ transform: [{ scaleX: 1.3 }, { scaleY: 1.3 }] }}
+              value={this.state.visibleTo}
               thumbColor={"#FFAA00"}
               trackColor={{ true: "#ffdd8f", false: "#A0A0A0" }}
-              onValueChange={(switchValue) => this.setState({ switchValue })} />
-            <Text style={{ ...styles.text, left: "40%"}}>{this.state.switchValue ? ("Visible To") : ("Invisible")}</Text>
+              onValueChange={visibleTo => this.setState({ visibleTo })}
+            />
+            <Text style={{ ...styles.text, left: "40%" }}>
+              {this.state.visibleTo ? "Visible To" : "Invisible"}
+            </Text>
           </View>
           <Input
-            onChangeText={(title) => this.setState({title})}
+            onChangeText={title => this.setState({ title })}
             value={this.state.title}
-            placeholder='Title' containerStyle={styles.input} 
-            inputContainerStyle={{ borderBottomWidth: 0 }} inputStyle={{ fontFamily: "PoppinsMedium" }} />
+            placeholder="Title"
+            containerStyle={styles.input}
+            inputContainerStyle={{ borderBottomWidth: 0 }}
+            inputStyle={{ fontFamily: "PoppinsMedium" }}
+          />
           <Input
-            onChangeText={(description) => this.setState({ description })}
-            value={this.state.description} multiline={true} numberOfLines={6}
-            placeholder='Description' containerStyle={styles.input} textAlignVertical={'top'}
-            inputContainerStyle={{ borderBottomWidth: 0 }} inputStyle={{ fontFamily: "PoppinsMedium" }} />
+            onChangeText={description => this.setState({ description })}
+            value={this.state.description}
+            multiline={true}
+            numberOfLines={6}
+            placeholder="Description"
+            containerStyle={styles.input}
+            textAlignVertical={"top"}
+            inputContainerStyle={{ borderBottomWidth: 0 }}
+            inputStyle={{ fontFamily: "PoppinsMedium" }}
+          />
         </View>
-        <View style={{width: "60%", marginTop: "-8%", top: "-1.5%"}}>
+        <View style={{ width: "60%", marginTop: "-8%", top: "-1.5%" }}>
           <Button
             onPress={() => this.createButton()}
             titleStyle={styles.buttonText}
@@ -174,7 +230,7 @@ const styles = StyleSheet.create({
     flexDirection: "row",
     alignItems: "center",
     paddingTop: 15,
-    justifyContent: "space-between",
+    justifyContent: "space-between"
   },
   text: {
     fontSize: 17,
@@ -190,7 +246,7 @@ const styles = StyleSheet.create({
   input: {
     borderRadius: 10,
     marginBottom: 15,
-    backgroundColor: 'white',
+    backgroundColor: "white",
     elevation: 3
   },
   buttonInput: {

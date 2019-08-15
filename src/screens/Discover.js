@@ -1,8 +1,17 @@
 import React, { Component } from "react";
-import { StyleSheet, View, Image, Text, StatusBar, TouchableOpacity, ScrollView, Alert } from "react-native";
-import AsyncStorage from '@react-native-community/async-storage';
-import Icon from 'react-native-vector-icons/FontAwesome5';
-import { Input } from 'react-native-elements';
+import {
+  StyleSheet,
+  View,
+  Image,
+  Text,
+  StatusBar,
+  TouchableOpacity,
+  ScrollView,
+  Alert
+} from "react-native";
+import AsyncStorage from "@react-native-community/async-storage";
+import Icon from "react-native-vector-icons/FontAwesome5";
+import { Input } from "react-native-elements";
 import ioApi from "../socket";
 
 let io = null;
@@ -10,38 +19,36 @@ let io = null;
 export class Discover extends Component {
   static navigationOptions = {
     header: null
-  }
+  };
 
   constructor(props) {
     super(props);
-    this.state = ({
+    this.state = {
       quizzesTrend: [],
       myQuizzes: []
-    });
+    };
   }
 
   async componentDidMount() {
     try {
-      io = ioApi('profile', await AsyncStorage.getItem('token'));
-      io.emit('getDiscover');
-      io.on('setDiscoverTrend', (data) => {
+      io = ioApi("profile", await AsyncStorage.getItem("token"));
+      io.emit("getDiscover");
+      io.on("setDiscoverTrend", data => {
         this.setState({ quizzesTrend: data });
       });
-      io.on('setDiscoverMyQuiz', (data) => {
+      io.on("setDiscoverMyQuiz", data => {
         this.setState({ myQuizzes: data });
       });
-    }
-    catch (error) {
+    } catch (error) {
       Alert.alert("Error", JSON.stringify(error));
     }
   }
 
   componentWillUnmount() {
     try {
-      io.removeListener('setDiscoverTrend');
-      io.removeListener('setDiscoverMyQuiz');
-    }
-    catch (error) {
+      io.removeListener("setDiscoverTrend");
+      io.removeListener("setDiscoverMyQuiz");
+    } catch (error) {
       Alert.alert("Error", JSON.stringify(error));
     }
   }
@@ -49,32 +56,57 @@ export class Discover extends Component {
   trendsRender() {
     return this.state.quizzesTrend.map((data, index) => {
       return (
-        <TouchableOpacity key={index} onPress={() => this.props.navigation.navigate('Description', { data: data })} style={styles.card}>
-          <Image style={styles.cardImage} source={{ uri: global.url + data.img }} />
+        <TouchableOpacity
+          key={index}
+          onPress={() =>
+            this.props.navigation.navigate("Description", { data: data })
+          }
+          style={styles.card}
+        >
+          <Image
+            style={styles.cardImage}
+            source={{ uri: global.url + data.img }}
+          />
           <View style={styles.cardFooter}>
             <View style={styles.cardUser}>
               <Text style={styles.cardNick}>{data.username}</Text>
-              <Image style={styles.cardUserImage} source={{ uri: global.url + data.userImg }} />
+              <Image
+                style={styles.cardUserImage}
+                source={{ uri: global.url + data.userImg }}
+              />
             </View>
             <Text style={styles.cardTitle}>{data.title}</Text>
-            <Text style={{ fontFamily: "PoppinsLight" }}>{data.questionCount} Questions</Text>
+            <Text style={{ fontFamily: "PoppinsLight" }}>
+              {data.questionCount} Questions
+            </Text>
           </View>
         </TouchableOpacity>
-      )
+      );
     });
   }
 
   myQuizzesRender() {
     return this.state.myQuizzes.map((data, index) => {
       return (
-        <TouchableOpacity key={index} onPress={() => this.props.navigation.navigate('Description', { data: data})} style={styles.miniCard}>
-          <Image style={styles.miniCardImage} source={{ uri: global.url + data.img }} />
+        <TouchableOpacity
+          key={index}
+          onPress={() =>
+            this.props.navigation.navigate("Description", { data: data })
+          }
+          style={styles.miniCard}
+        >
+          <Image
+            style={styles.miniCardImage}
+            source={{ uri: global.url + data.img }}
+          />
           <View style={styles.miniCardFooter}>
             <Text style={styles.miniCardTitle}>{data.title}</Text>
-            <Text style={styles.miniCardText}>{data.questionCount} Questions</Text>
+            <Text style={styles.miniCardText}>
+              {data.questionCount} Questions
+            </Text>
           </View>
         </TouchableOpacity>
-      )
+      );
     });
   }
 
@@ -82,21 +114,32 @@ export class Discover extends Component {
     return (
       <View style={styles.root}>
         <StatusBar backgroundColor="#F9F9F9" barStyle="dark-content" />
-        <View style={{width: "90%", alignSelf: "center"}}>
-          <Input placeholder='Ara' containerStyle={styles.searchInput}
-            inputContainerStyle={{ borderBottomWidth: 0 }} inputStyle={styles.inputStyle}
-            leftIconContainerStyle={styles.inputIcon} shake={true}
-            leftIcon={<Icon name='search' size={25} color='#D8D8D8' />} />
+        <View style={{ width: "90%", alignSelf: "center" }}>
+          <Input
+            placeholder="Ara"
+            containerStyle={styles.searchInput}
+            inputContainerStyle={{ borderBottomWidth: 0 }}
+            inputStyle={styles.inputStyle}
+            leftIconContainerStyle={styles.inputIcon}
+            shake={true}
+            leftIcon={<Icon name="search" size={25} color="#D8D8D8" />}
+          />
         </View>
         <View style={styles.trendingsView}>
           <View style={styles.trendingsHeadline}>
             <Text style={styles.trendingsHeadlineText}>Trendings</Text>
             <TouchableOpacity>
-              <Text style={{ ...styles.trendingsHeadlineText, fontSize: 15 }}>See All</Text>
+              <Text style={{ ...styles.trendingsHeadlineText, fontSize: 15 }}>
+                See All
+              </Text>
             </TouchableOpacity>
           </View>
-          <View style={{paddingLeft: 20, width: "95%"}}>
-            <ScrollView horizontal showsHorizontalScrollIndicator={false} style={styles.myQuizzes}>
+          <View style={{ paddingLeft: 20, width: "95%" }}>
+            <ScrollView
+              horizontal
+              showsHorizontalScrollIndicator={false}
+              style={styles.myQuizzes}
+            >
               {this.trendsRender()}
             </ScrollView>
           </View>
@@ -104,25 +147,38 @@ export class Discover extends Component {
         <View style={styles.topPicsView}>
           <Text style={styles.topPicsTitle}>Top Pics</Text>
           <View style={{ flexDirection: "row" }}>
-            <ScrollView horizontal showsHorizontalScrollIndicator={false} style={{ width: "100%" }}>
+            <ScrollView
+              horizontal
+              showsHorizontalScrollIndicator={false}
+              style={{ width: "100%" }}
+            >
               {this.myQuizzesRender()}
             </ScrollView>
           </View>
         </View>
         <View style={styles.footerView}>
-          <TouchableOpacity onPress={() => this.props.navigation.navigate('Discover')}>
+          <TouchableOpacity
+            onPress={() => this.props.navigation.navigate("Discover")}
+          >
             <Icon name="compass" size={30} color="#6520A0" />
           </TouchableOpacity>
-          <TouchableOpacity onPress={() => this.props.navigation.navigate('Create')}>
+          <TouchableOpacity
+            onPress={() => this.props.navigation.navigate("Create")}
+          >
             <Icon name="plus-square" size={30} color="#D4D3D3" />
           </TouchableOpacity>
           <TouchableOpacity onPress={() => this.props.navigation.goBack()}>
-            <Image style={styles.footerHome} source={require('../assets/icon/home.png')} />
+            <Image
+              style={styles.footerHome}
+              source={require("../assets/icon/home.png")}
+            />
           </TouchableOpacity>
           <TouchableOpacity>
             <Icon name="star" size={30} color="#D4D3D3" />
           </TouchableOpacity>
-          <TouchableOpacity onPress={() => this.props.navigation.navigate('Profile')}>
+          <TouchableOpacity
+            onPress={() => this.props.navigation.navigate("Profile")}
+          >
             <Icon name="user" size={30} color="#D4D3D3" />
           </TouchableOpacity>
         </View>
@@ -135,10 +191,10 @@ const styles = StyleSheet.create({
   root: {
     flex: 1,
     backgroundColor: "#F9F9F9",
-    justifyContent: "space-between",
+    justifyContent: "space-between"
   },
-  searchInput:{
-    backgroundColor: 'white',
+  searchInput: {
+    backgroundColor: "white",
     elevation: 5,
     borderRadius: 30,
     marginTop: "5%"
@@ -243,7 +299,7 @@ const styles = StyleSheet.create({
     paddingLeft: 7,
     backgroundColor: "white",
     position: "absolute",
-    borderRadius: 9,
+    borderRadius: 9
   },
   miniCardTitle: {
     fontSize: 15,

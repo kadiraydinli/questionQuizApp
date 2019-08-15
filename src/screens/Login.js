@@ -85,13 +85,6 @@ export class Login extends Component {
             buttonStyle={{ ...styles.input, backgroundColor: "#FFB200" }}
             title="Login"
           />
-          <Button
-            style={{ marginBottom: 20 }}
-            titleStyle={{ fontSize: 18, color: "#D2D1D1", fontFamily: "PoppinsMedium" }}
-            buttonStyle={{ ...styles.input, backgroundColor: "#ffff" }}
-            title="  Log In With Google"
-            icon={<Icon name="google" size={25} color="#D2D1D1" />}
-          />
           <View style={styles.labelView}>
             <TouchableOpacity onPress={() => this.props.navigation.navigate('SignUp')}>
               <Text style={styles.labelButton}>Sign Up</Text>

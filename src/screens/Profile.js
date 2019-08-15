@@ -51,11 +51,19 @@ export class Profile extends Component {
         io.removeListener('profilQuiz');
     }
 
-    async removeItemValue() {
+    async logout() {
         try {
-            await AsyncStorage.removeItem('token');
-            this.props.navigation.navigate('Login')
-            Alert.alert("Successful", "You logged out!");
+            Alert.alert("", "Are you sure you want to logout?", 
+            [
+                {text: 'Cancel'},
+                {
+                    text: 'Log out', onPress: async () => {
+                        await AsyncStorage.removeItem('token')
+                        this.props.navigation.navigate('Login')
+                        Alert.alert("Successful", "You logged out!");
+                    }
+                }
+            ]); 
         }
         catch (error) {
             Alert.alert("Error", error);
@@ -69,7 +77,7 @@ export class Profile extends Component {
                     <Image style={styles.cardImage} source={{ uri: global.url + data.img }} />
                     <View style={styles.cardFooter}>
                         <Text style={styles.cardTitle}>{data.title}</Text>
-                        <Text style={{ fontFamily: "PoppinsLight" }}>61 Questions</Text>
+                        <Text style={{ fontFamily: "PoppinsLight" }}>{this.state.quizCount} Question</Text>
                     </View>
                 </TouchableOpacity>
             )
@@ -90,7 +98,7 @@ export class Profile extends Component {
                             <TouchableOpacity>
                                 <Icon name="share-alt" size={25} color="white" />
                             </TouchableOpacity>
-                            <TouchableOpacity onPress={() => this.removeItemValue()}>
+                            <TouchableOpacity onPress={() => this.logout()}>
                                 <Icon name="sign-out" size={25} color="white" />
                             </TouchableOpacity>
                         </View>
