@@ -1,5 +1,5 @@
 import React, { Component } from "react";
-import { StyleSheet, View, Text, Image, StatusBar, TouchableOpacity, ScrollView, Alert } from "react-native";
+import { StyleSheet, View, Text, Image, StatusBar, TouchableOpacity, ScrollView, Alert, BackHandler } from "react-native";
 import AsyncStorage from '@react-native-community/async-storage';
 import Icon from 'react-native-vector-icons/FontAwesome';
 import ioApi from "../socket";
@@ -14,12 +14,18 @@ export class Profile extends Component {
     constructor(props) {
         super(props);
         this.state = ({
+            _refresh: false,
             userImage: '',
             fullName: '',
             userName: '',
             quizzes: [],
             quizCount: 0
         });
+    }
+
+    _refresh(data) {
+        this.setState({_refresh: data});
+        this.componentDidMount();
     }
 
     async componentDidMount() {
@@ -29,6 +35,7 @@ export class Profile extends Component {
 
             io.on('setProfilInfo', (data) => {
                 this.setState({ 
+                    userImage: data.img,
                     fullName: data.firstname + " " + data.lastname,
                     userName: data.username
                 });
@@ -76,8 +83,11 @@ export class Profile extends Component {
                 <TouchableOpacity key={index} style={styles.card} onPress={() => this.props.navigation.navigate('Description', { data: data })}>
                     <Image style={styles.cardImage} source={{ uri: global.url + data.img }} />
                     <View style={styles.cardFooter}>
-                        <Text style={styles.cardTitle}>{data.title}</Text>
-                        <Text style={{ fontFamily: "PoppinsLight" }}>{this.state.quizCount} Question</Text>
+                        <Text style={data.title.length >= 21 ? ({...styles.cardTitle, fontSize: 13}): 
+                            (data.title.length >= 13 ? ({...styles.cardTitle, fontSize: 14}):(styles.cardTitle))}>
+                            {data.title}
+                        </Text>
+                        <Text style={{ fontFamily: "PoppinsLight" }}>{data.questionCount} Question</Text>
                     </View>
                 </TouchableOpacity>
             )
@@ -90,24 +100,27 @@ export class Profile extends Component {
                 <StatusBar backgroundColor="#9B3ADB" barStyle="light-content" />
                 <View style={styles.header}>
                     <View style={styles.headerButton}>
-                        <TouchableOpacity onPress={() => this.props.navigation.goBack()}><Icon name="times" size={25} color="white" /></TouchableOpacity>
-                        <View style={{flexDirection: "row", justifyContent: "space-between", width: "30%"}}>
-                            <TouchableOpacity>
+                        <TouchableOpacity onPress={() => this.props.navigation.goBack()} style={{ padding: 10 }}>
+                            <Icon name="times" size={25} color="white" />
+                        </TouchableOpacity>
+                        <View style={{flexDirection: "row", justifyContent: "space-between", width: "33%"}}>
+                            <TouchableOpacity style={{ padding: 10 }}>
                                 <Icon name="star" size={25} color="white" />
                             </TouchableOpacity>
-                            <TouchableOpacity>
+                            <TouchableOpacity style={{ padding: 10 }}>
                                 <Icon name="share-alt" size={25} color="white" />
                             </TouchableOpacity>
-                            <TouchableOpacity onPress={() => this.logout()}>
+                            <TouchableOpacity onPress={() => this.logout()} style={{ padding: 10 }}>
                                 <Icon name="sign-out" size={25} color="white" />
                             </TouchableOpacity>
                         </View>
                     </View>
                     <View style={styles.userInfo}>
-                        <Image source={require('../assets/images/a.png')} style={styles.userImage} />
+                        <Image source={{ uri: global.url + this.state.userImage }} style={styles.userImage} />
                         <View style={styles.userText}>
                             <Text style={styles.userName}>{this.state.fullName}</Text>
-                            <Icon name="pencil" size={25} color="white" onPress={() => this.props.navigation.navigate('UserEdit')} />
+                            <Icon name="pencil" size={25} color="white" style={{ padding: 10 }}
+                                onPress={() => this.props.navigation.navigate('UserEdit', { _refresh: this._refresh.bind(this)})} />
                         </View>
                         <Text style={styles.userNick}>{this.state.userName}</Text>
                     </View>
@@ -147,13 +160,16 @@ const styles = StyleSheet.create({
     headerButton: {
         flexDirection: "row",
         justifyContent: "space-between",
-        margin: 15
+        alignItems: "center",
+        margin: 15,
+        marginTop: 0
     },
     userInfo: {
         alignItems: "center",
         width: "100%"
     },
     userImage: {
+        backgroundColor: "#DCDCDC",
         borderWidth: 1,
         width: 100,
         height: 100,
@@ -162,13 +178,11 @@ const styles = StyleSheet.create({
     },
     userText: {
         flexDirection: "row",
-        alignItems: "center",
-        marginTop: 7
+        alignItems: "center"
     },
     userName: {
         color: "white",
         fontSize: 22,
-        marginRight: 10,
         fontFamily: "PoppinsMedium"
     },
     userNick: {
@@ -217,6 +231,7 @@ const styles = StyleSheet.create({
         padding: 10,
         width: "100%",
         backgroundColor: "white",
+        justifyContent: "space-between",
         position: "absolute",
         height: "40%",
         borderRadius: 9,
@@ -237,7 +252,7 @@ const styles = StyleSheet.create({
         left: 3
     },
     cardTitle: {
-        fontSize: 17,
+        fontSize: 17,  //14
         fontFamily: "PoppinsSemiBold"
     },
     quizzes: {

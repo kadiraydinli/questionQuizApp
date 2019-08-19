@@ -1,6 +1,7 @@
 import React, { Component } from "react";
-import { StyleSheet, View, Image, StatusBar } from "react-native";
+import { StyleSheet, View, Image, StatusBar, Alert, BackHandler, TouchableOpacity } from "react-native";
 import { Button, Input } from 'react-native-elements';
+import Icon from 'react-native-vector-icons/FontAwesome';
 import ioApi from "../socket";
 
 let io = null;
@@ -17,20 +18,36 @@ export class EnterUserName extends Component {
     }
   }
 
+  componentDidMount() {
+    io = ioApi('game');
+    this.backHandler = BackHandler.addEventListener('hardwareBackPress', this.hardwareBackPress);
+  }
+
+  componentWillUnmount() {
+    this.backHandler.remove()
+  }
+
   sendButton() {
     io.emit('sendUsername', this.state.nick);
     this.setState({ nick: '' });
-    this.props.navigation.navigate('Lobby');
+    this.props.navigation.navigate('Lobby', { pin: this.props.navigation.getParam('pin', 0), admin: false});
   }
 
-  componentDidMount() {
-    io = ioApi('game');
+  hardwareBackPress = () => {
+    Alert.alert("", "Are you sure you want to quit the quiz?", [
+      { text: 'No' },
+      { text: 'Yes', onPress: () => this.props.navigation.navigate('Home') }
+    ]);
+    return true;
   }
 
   render() {
     return (
       <View style={styles.root}>
         <StatusBar backgroundColor="rgba(155, 58, 219, 1)" barStyle="light-content" />
+        <TouchableOpacity style={styles.exitButton} onPress={() => this.hardwareBackPress()}>
+          <Icon name="times" size={35} color="white" />
+        </TouchableOpacity>
         <Image style={styles.logo} source={require('../assets/icon/logo-w.png')} resizeMode="center" />
         <View style={{ width: "75%" }}>
           <Input
@@ -57,7 +74,12 @@ const styles = StyleSheet.create({
   root: {
     flex: 1,
     backgroundColor: "rgba(155,58,219,1)",
-    justifyContent: "center", alignItems: "center"
+    justifyContent: "center",
+    alignItems: "center"
+  },
+  exitButton: {
+    top: "-25%",
+    left: "-40%"
   },
   bottomShape: {
     top: "85.22%",

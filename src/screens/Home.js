@@ -1,5 +1,5 @@
 import React, { Component } from "react";
-import { StyleSheet, View, Image, TouchableOpacity, Text, StatusBar } from "react-native";
+import { StyleSheet, View, Image, TouchableOpacity, Text, StatusBar, Alert, BackHandler } from "react-native";
 import Svg, { Path, Rect } from "react-native-svg";
 import Icon from 'react-native-vector-icons/FontAwesome5';
 import ioApi from "../socket";
@@ -13,14 +13,27 @@ export class Home extends Component {
 
   constructor(props) {
     super(props);
-
+    this.hardwareBackPress1 = this.hardwareBackPress1.bind(this);
   }
 
   componentDidMount() {
+    //BackHandler.addEventListener('hardwareBackPress1', this.hardwareBackPress1);
     io = ioApi('game');
     io.on('connected', () => {
       console.log("Connected");
     });
+  }
+
+  componentWillUnmount() {
+    //BackHandler.removeEventListener('hardwareBackPress1', this.hardwareBackPress1);
+  }
+
+  hardwareBackPress1() {
+    Alert.alert("", "Are you sure you want to exit the application?", [
+      { text: 'No' },
+      { text: 'Yes', onPress: () => BackHandler.exitApp() }
+    ]);
+    return true;
   }
   
   render() {

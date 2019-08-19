@@ -17,6 +17,7 @@ export class UserEdit extends Component {
     super();
     this.state = {
       userImage: '',
+      isImageSelected: false,
       name: '',
       surname: '',
       username: '',
@@ -24,6 +25,11 @@ export class UserEdit extends Component {
       password: '',
       confirmPassword: ''
     }
+  }
+
+  goBack() {
+    this.props.navigation.state.params._refresh(true);
+    this.props.navigation.goBack();
   }
 
   async componentDidMount() {
@@ -42,6 +48,36 @@ export class UserEdit extends Component {
           email: data.email,
           //password: data.password
         });
+      });
+
+      io.on('file', (user) => {
+        if(this.state.isImageSelected) {
+          alert("hop")
+          let url = global.url + "api/upload";
+          let body = new FormData();
+          body.append("userId", user.userId);
+          body.append("whereToIns", "user");
+          body.append("theFile", {
+            uri: this.state.userImage.uri,
+            name: this.state.userImage.fileName,
+            filename: this.state.userImage.fileName,
+            type: "image/png"
+          });
+          body.append("Content-Type", "image/png");
+
+          fetch(url, {
+            method: "POST",
+            headers: {"Content-Type": "multipart/form-data"},
+            body: body
+          })
+            .then(res => {
+              res.ok
+                ? alert("güncellendi")
+                : null;
+            })
+            .catch(e => alert(e))
+            .done();
+        }
       });
 
       io.on('message', (data) => {
@@ -65,16 +101,25 @@ export class UserEdit extends Component {
 
   send() {
     try {
-      io.emit('profilUpdate', {
+      if(this.state.confirmPassword) {
+        io.emit('profilUpdate', {
         firstname: this.state.name.trim(),
         lastname: this.state.surname.trim(),
         username: this.state.username.trim(),
         email: this.state.email.trim(),
         password: this.state.password,
-        //newPassword: this.state.confirmPassword.trim() != '' ? (this.state.confirmPassword) : (typeof undefined)
-        //this.state.confirmPassword
-      });
-      //alert(this.state.confirmPassword.trim() != '' ? (this.state.confirmPassword) : (typeof undefined))
+        newPassword: this.state.confirmPassword
+        });
+      }
+      else {
+        io.emit('profilUpdate', {
+        firstname: this.state.name.trim(),
+        lastname: this.state.surname.trim(),
+        username: this.state.username.trim(),
+        email: this.state.email.trim(),
+        password: this.state.password,
+        });
+      }
     }
     catch (error) {
       Alert.alert("Error", JSON.stringify(error));
@@ -86,21 +131,21 @@ export class UserEdit extends Component {
       <View style={styles.root}>
         <StatusBar backgroundColor="#F9F9F9" barStyle="dark-content" />
         <View style={styles.header}>
-          <TouchableOpacity onPress={() => this.props.navigation.goBack()}>
+          <TouchableOpacity onPress={() => this.goBack()}>
             <Text style={styles.text}>Cancel</Text>
           </TouchableOpacity>
         </View>
         <View style={styles.userImage}>
-          <PhotoUpload onPhotoSelect={avatar => {
-            if (avatar) {
-              this.setState({ isImageSelected: true })
-            }
-          }}>
-            <Image style={{
-              paddingVertical: 30, ...styles.userImage
+          <PhotoUpload
+            onPhotoSelect={avatar => {
+              if (avatar) {
+                this.setState({isImageSelected: true});}
             }}
-              source={require('../assets/images/a.png')}
-              resizeMode='cover' />
+            onResponse={image => {
+              if (image) {this.setState({ userImage: image });}
+            }}>
+            <Image style={styles.userImage} resizeMode="cover"
+              source={{ uri: global.url + this.state.userImage }} />
           </PhotoUpload>
         </View>
         <View style={{ width: "85%", marginTop: 100, top: -70 }}>

@@ -8,7 +8,8 @@ import {
   TouchableOpacity,
   Dimensions,
   Alert,
-  Switch
+  Switch,
+  ScrollView
 } from "react-native";
 import AsyncStorage from "@react-native-community/async-storage";
 import { Input, Button } from "react-native-elements";
@@ -25,6 +26,7 @@ export class Create extends Component {
   constructor(props) {
     super(props);
     this.state = {
+      isUpdate: false,
       quizId: "",
       file: "",
       token: "",
@@ -33,16 +35,18 @@ export class Create extends Component {
       visibleTo: true,
       title: "",
       description: "",
-      question: []
+      question: [],
+      buttonDisabled: false
     };
   }
 
   async componentDidMount() {
+    this.setState({isUpdate: false});
     try {
       io = ioApi("profile", await AsyncStorage.getItem("token"));
       io.on("quizId", quizId => {
         if (this.state.file) {
-          let url = global.url + "api/uploadMobile";
+          let url = global.url + "api/upload";
           let body = new FormData();
           body.append("quizId", quizId);
           body.append("whereToIns", "quiz");
@@ -56,9 +60,7 @@ export class Create extends Component {
 
           fetch(url, {
             method: "POST",
-            headers: {
-              "Content-Type": "multipart/form-data"
-            },
+            headers: {"Content-Type": "multipart/form-data"},
             body: body
           })
             .then(res => {
@@ -78,6 +80,29 @@ export class Create extends Component {
     }
   }
 
+  componentWillUnmount() {
+    try {
+      this.setState({
+        isUpdate: false,
+        quizId: "",
+        file: "",
+        token: "",
+        image: "",
+        isImageSelected: false,
+        picker: "",
+        visibleTo: true,
+        title: "",
+        description: "",
+        question: [],
+        buttonDisabled: false
+      });
+      io.removeListener("quizId");
+      io.removeListener("quizError");
+    } catch (error) {
+      Alert.alert("Error", JSON.stringify(error));
+    }
+  }
+
   _getTokenStorage = async () => {
     try {
       const value = await AsyncStorage.getItem("token");
@@ -90,6 +115,7 @@ export class Create extends Component {
   createButton() {
     try {
       if (this.state.title.trim() != "") {
+        this.setState({ buttonDisabled: true });
         io.emit("quizCreate", {
           title: this.state.title,
           description: this.state.description,
@@ -107,25 +133,8 @@ export class Create extends Component {
     }
   }
 
-  componentWillUnmount() {
-    try {
-      this.setState({
-        quizId: "",
-        file: "",
-        token: "",
-        image: "",
-        isImageSelected: false,
-        picker: "",
-        visibleTo: true,
-        title: "",
-        description: "",
-        question: []
-      });
-      io.removeListener("quizId");
-      io.removeListener("quizError");
-    } catch (error) {
-      Alert.alert("Error", JSON.stringify(error));
-    }
+  questionUpdate() {
+    
   }
 
   render() {
@@ -136,29 +145,17 @@ export class Create extends Component {
           <TouchableOpacity onPress={() => this.props.navigation.goBack()}>
             <Text style={styles.text}>Cancel</Text>
           </TouchableOpacity>
+          {this.state.isUpdate ? (
+            <TouchableOpacity onPress={() => this.props.navigation.goBack()}>
+              <Text style={styles.text}>Update</Text>
+            </TouchableOpacity>
+          ) : (null)}
         </View>
         <TouchableOpacity style={styles.addImage}>
           <PhotoUpload
-            onPhotoSelect={avatar => {
-              if (avatar) {
-                this.setState({
-                  isImageSelected: true
-                });
-              }
-            }}
-            onResponse={image => {
-              if (image) {
-                this.setState({ file: image });
-              }
-            }}>
-            <Image
-              style={{
-                paddingVertical: 30,
-                width: Dimensions.get("window").width,
-                height: Dimensions.get("window").height / 3
-              }}
-              resizeMode="cover"
-            />
+            onPhotoSelect={avatar => {if (avatar) { this.setState({isImageSelected: true}) }}}
+            onResponse={image => {if (image) { this.setState({ file: image }) }}}>
+            <Image style={styles.uploadImage} resizeMode="cover" />
           </PhotoUpload>
           {!this.state.isImageSelected ? (
             <Text style={{ ...styles.text, position: "absolute" }}>
@@ -167,20 +164,13 @@ export class Create extends Component {
           ) : null}
         </TouchableOpacity>
         <View style={{ width: "90%", marginTop: "-8%" }}>
-          <View
-            style={{
-              flexDirection: "row",
-              padding: 10,
-              bottom: 10,
-              alignItems: "center"
-            }}>
+          <View style={{ flexDirection: "row", padding: 10, bottom: 10, alignItems: "center"}}>
             <Switch
               style={{ transform: [{ scaleX: 1.3 }, { scaleY: 1.3 }] }}
               value={this.state.visibleTo}
               thumbColor={"#FFAA00"}
               trackColor={{ true: "#ffdd8f", false: "#A0A0A0" }}
-              onValueChange={visibleTo => this.setState({ visibleTo })}
-            />
+              onValueChange={visibleTo => this.setState({ visibleTo })} />
             <Text style={{ ...styles.text, left: "40%" }}>
               {this.state.visibleTo ? "Visible To" : "Invisible"}
             </Text>
@@ -205,14 +195,23 @@ export class Create extends Component {
             inputStyle={{ fontFamily: "PoppinsMedium" }}
           />
         </View>
-        <View style={{ width: "60%", marginTop: "-8%", top: "-1.5%" }}>
-          <Button
-            onPress={() => this.createButton()}
-            titleStyle={styles.buttonText}
-            buttonStyle={styles.buttonInput}
-            title="Add Question"
-          />
-        </View>
+        {this.state.isUpdate ? (
+          <View style={{ width: "90%", alignItems: "center", top: "-3%" }}>
+            <ScrollView horizontal showsHorizontalScrollIndicator={false} style={{ width: "90%" }}>
+              <TouchableOpacity onPress={() => this.props.navigation.navigate('AddQuestion')} style={styles.miniCard}>
+                <Image style={styles.miniCardImage} source={require('../assets/images/e56809f40f7d2a4f8905f135ada6039f4f7551c8.png')} />
+                <View style={styles.miniCardFooter}>
+                  <Text style={styles.miniCardText}>Questions 1</Text>
+                </View>
+              </TouchableOpacity>
+            </ScrollView>
+          </View>
+        ) : (
+          <View style = {{ width: "60%", marginTop: "-8%", top: "-1.5%" }}>
+            <Button disabled={this.state.buttonDisabled} onPress={() => this.createButton()}
+              titleStyle={styles.buttonText} buttonStyle={styles.buttonInput} title="Add Question" />
+          </View>
+        )}
       </View>
     );
   }
@@ -243,11 +242,40 @@ const styles = StyleSheet.create({
     alignItems: "center",
     marginTop: "-10%"
   },
+  uploadImage: {
+    width: Dimensions.get("window").width,
+    height: Dimensions.get("window").height / 3,
+    paddingVertical: 30,
+  },
   input: {
     borderRadius: 10,
     marginBottom: 15,
     backgroundColor: "white",
     elevation: 3
+  },
+  miniCard: {
+    width: 160,
+    height: 100,
+    borderRadius: 10,
+    marginRight: 20
+  },
+  miniCardImage: {
+    width: 160,
+    height: 100,
+    borderRadius: 10
+  },
+  miniCardFooter: {
+    width: "100%",
+    height: 40,
+    top: "60%",
+    alignItems: "center",
+    justifyContent: "center",
+    backgroundColor: "white",
+    position: "absolute",
+    borderRadius: 9,
+  },
+  miniCardText: {
+    fontFamily: "PoppinsMedium"
   },
   buttonInput: {
     borderRadius: 5,

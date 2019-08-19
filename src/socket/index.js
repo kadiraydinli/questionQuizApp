@@ -1,6 +1,6 @@
 import io from 'socket.io-client';
 
-global.url = "http://192.168.1.34:3000/";
+global.url = "http://192.168.1.37:3000/";
 
 const connections = {};
 export default (room, token) => {

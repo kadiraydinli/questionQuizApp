@@ -1,6 +1,7 @@
 import React, { Component } from "react";
-import { StyleSheet, View, Image, StatusBar, Alert } from "react-native";
+import { StyleSheet, View, Image, StatusBar, Alert, TouchableOpacity } from "react-native";
 import { Button, Input } from 'react-native-elements';
+import Icon from 'react-native-vector-icons/FontAwesome';
 import ioApi from "../socket";
 
 let io = null;
@@ -13,6 +14,7 @@ export class EnterPin extends Component {
 
   constructor(props) {
     super(props);
+    this.hardwareBackPress = this.hardwareBackPress.bind(this);
     this.state = {
       pin: ''
     }
@@ -29,15 +31,15 @@ export class EnterPin extends Component {
 
   componentDidMount() {
     try {
-      io = ioApi('game');
+      BackHandler.addEventListener('hardwareBackPress', this.hardwareBackPress);
 
+      io = ioApi('game');
       io.on('join', (data) => {
         if (data.status) {
-          global.pin=this.state.pin;
-          this.props.navigation.navigate('EnterUserName');
+          this.props.navigation.navigate('EnterUserName', { pin: this.state.pin });
         }
         else
-          Alert.alert("", "Pin bulunamadı");
+          Alert.alert("", "PIN not found!");
       });
     }
     catch (error) {
@@ -46,13 +48,22 @@ export class EnterPin extends Component {
   }
 
   componentWillUnmount() {
+    BackHandler.removeListener('hardwareBackPress', this.hardwareBackPress)
     io.removeListener('join')
+  }
+
+  hardwareBackPress = () => {
+    this.props.navigation.goBack();
+    return true;
   }
 
   render() {
     return (
       <View style={styles.root}>
         <StatusBar backgroundColor="rgba(155, 58, 219, 1)" barStyle="light-content" />
+        <TouchableOpacity style={styles.exitButton} onPress={() => this.props.navigation.goBack()}>
+          <Icon name="times" size={35} color="white" />
+        </TouchableOpacity>
         <Image style={styles.logo} source={require('../assets/icon/logo-w.png')} resizeMode="center" />
         <View style={{ width: "75%" }}>
           <Input
@@ -80,7 +91,12 @@ const styles = StyleSheet.create({
   root: {
     flex: 1,
     backgroundColor: "rgba(155,58,219,1)",
-    justifyContent: "center", alignItems: "center"
+    justifyContent: "center",
+    alignItems: "center"
+  },
+  exitButton: {
+    top: "-25%",
+    left: "-40%"
   },
   bottomShape: {
     top: "85.22%",

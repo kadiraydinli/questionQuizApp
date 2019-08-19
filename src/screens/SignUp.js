@@ -1,5 +1,5 @@
 import React, { Component } from "react";
-import { StyleSheet, View, Image, Text, TouchableOpacity, StatusBar, Alert } from "react-native";
+import { StyleSheet, View, Image, Text, TouchableOpacity, StatusBar, Alert, ToastAndroid } from "react-native";
 import Icon from 'react-native-vector-icons/FontAwesome';
 import { Button, Input } from 'react-native-elements';
 import ioApi from "../socket";
@@ -25,8 +25,12 @@ export class SignUp extends Component {
   componentDidMount() {
     io = ioApi('user');
 
+    io.on('registerSuccessful', (data) => {
+      ToastAndroid.show('You will be redirected in 1 second', ToastAndroid.SHORT);
+    });
+
     io.on('registerError', (data) => {
-      Alert.alert(data.message);
+      Alert.alert("Error", data.message);
     });
   }
 

@@ -57,9 +57,9 @@ export class AddQuestion extends Component {
       io = ioApi("profile", await AsyncStorage.getItem("token"));
       io.on("newQuestionCreate", quiz => {
         if (this.state.file) {
-          let url = global.url + "api/uploadMobile";
+          let url = global.url + "api/upload";
           let body = new FormData();
-          body.append("quizId", quiz.questionId);
+          body.append("questionId", quiz.questionId);
           body.append("whereToIns", "question");
           body.append("Content-Type", "image/png");
           body.append("theFile", {
