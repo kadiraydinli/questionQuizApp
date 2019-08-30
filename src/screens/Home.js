@@ -18,7 +18,7 @@ export class Home extends Component {
 
   componentDidMount() {
     //BackHandler.addEventListener('hardwareBackPress1', this.hardwareBackPress1);
-    io = ioApi('game');
+    io = ioApi.connectionsRoom('game');
     io.on('connected', () => {
       console.log("Connected");
     });
@@ -76,19 +76,19 @@ export class Home extends Component {
           <View style={styles.line} />
         </View>
         <View style={styles.footerView}>
-          <TouchableOpacity onPress={() => this.props.navigation.navigate('Discover')}>
+          <TouchableOpacity style={{ padding: 5}} onPress={() => this.props.navigation.navigate('Discover')}>
             <Icon name="compass" size={30} color="#D4D3D3" />
           </TouchableOpacity>
-          <TouchableOpacity onPress={() => this.props.navigation.navigate('Create')}>
+          <TouchableOpacity style={{  padding: 5 }} onPress={() => this.props.navigation.navigate('Quiz', { isEditing: false })}>
             <Icon name="plus-square" size={30} color="#D4D3D3" />
           </TouchableOpacity>
           <TouchableOpacity onPress={() => this.props.navigation.navigate('EnterPin')}>
             <Image style={styles.footerHome} source={require('../assets/icon/homeActive.png')} />
           </TouchableOpacity>
-          <TouchableOpacity>
+          <TouchableOpacity style={{  padding: 5 }}>
             <Icon name="star" size={30} color="#D4D3D3" />
           </TouchableOpacity>
-          <TouchableOpacity onPress={() => this.props.navigation.navigate('Profile')}>
+          <TouchableOpacity style={{  padding: 5 }} onPress={() => this.props.navigation.navigate('Profile')}>
             <Icon name="user" size={30} color="#D4D3D3" />
           </TouchableOpacity>
         </View>

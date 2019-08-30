@@ -15,6 +15,17 @@ export class Description extends Component {
 
   constructor(props) {
     super(props);
+    this.state = {
+      titleStyle: { fontSize: 35, width: "90%", fontFamily: "PoppinsSemiBold"},
+      id: "",
+      title: "",
+      description: "",
+      image: "",
+      userImage: "",
+      pin: 0,
+      userName: "",
+      questionCount: 0
+    }
   }
 
   goBack() {
@@ -24,10 +35,22 @@ export class Description extends Component {
 
   async componentDidMount() {
     try {
-      io = ioApi("profile", await AsyncStorage.getItem("token"));
-      alert(JSON.stringify(data))
+      io = ioApi.connectionsRoom("profile", await AsyncStorage.getItem("token"));
+      data = this.props.navigation.getParam("data", "");
+      this.setState({
+        id: data._id,
+        title: data.title,
+        description: data.description,
+        image: data.img,
+        pin: data.pin,
+        userImage: data.userImg,
+        userName: data.username,
+        questionCount: data.questionCount
+      })
+      //alert(this.state.image)
+      this.fontSizeEdit();
     } catch (error) {
-      Alert.alert("Error", JSON.stringify(error));
+      Alert.alert("Error", "Description Screen componentDidMount\n" + JSON.stringify(error));
     }
   }
 
@@ -35,7 +58,7 @@ export class Description extends Component {
     try {
       io.removeListener("quizDel");
     } catch (error) {
-      Alert.alert("Error", JSON.stringify(error));
+      Alert.alert("Error", "Description Screen componentWillUnmount\n" + JSON.stringify(error));
     }
   }
 
@@ -50,8 +73,21 @@ export class Description extends Component {
       ]);
     }
     catch (error) {
-      Alert.alert("Error", JSON.stringify(error));
+      Alert.alert("Error", "Description Screen quizDelete\n" + JSON.stringify(error));
     }
+  }
+
+  fontSizeEdit() {
+    let length = this.state.title.length;
+    let style = { width: "90%", fontFamily: "PoppinsSemiBold", fontSize: 35}
+    if(length >= 25 && length <= 30) style = {...style, fontSize: 25}
+    else if (length >= 31 && length <= 40) style = { ...style, fontSize: 24 }
+    else if (length >= 41 && length <= 45) style = { ...style, fontSize: 23 }
+    else if (length >= 46 && length <= 50) style = { ...style, fontSize: 22 }
+    else if (length >= 51 && length <= 60) style = { ...style, fontSize: 21 }
+    else if (length >= 61 && length <= 80) style = { ...style, fontSize: 16 }
+    else if (length >= 81) style = { ...style, fontSize: 15 }
+    this.setState({titleStyle: style})
   }
 
   render() {
@@ -61,7 +97,7 @@ export class Description extends Component {
       <View style={styles.root}>
         <StatusBar backgroundColor="#F9F9F9" barStyle="dark-content" />
         <Image
-          source={{ uri: global.url + data.img }}
+          source={{ uri: global.url + this.state.image }}
           resizeMode="cover"
           style={styles.image}
         />
@@ -71,7 +107,7 @@ export class Description extends Component {
           <Icon name="times" size={30} color="white" />
         </TouchableOpacity>
         <View style={{ alignItems: "center" }}>
-          <Text style={styles.title}>{data.title}</Text>
+          <Text style={{...this.state.titleStyle}}>{this.state.title}</Text>
           <View style={styles.userView}>
             <View style={styles.userInfo}>
               {typeof data.userImg != "undefined" ? (
@@ -80,24 +116,27 @@ export class Description extends Component {
                   source={{ uri: global.url + data.userImg }}
                 />
               ) : null}
-              <Text style={styles.userNick}>{data.username}</Text>
+              <Text style={styles.userNick}>{this.state.userName}</Text>
             </View>
-            <View style={{ flexDirection: "row" }}>
-              <TouchableOpacity>
-                <Icon name="star" size={30} />
-              </TouchableOpacity>
-              <TouchableOpacity onPress={() => this.quizDelete()}>
-                <Icon name="trash" size={30} style={{ marginLeft: 20 }} />
-              </TouchableOpacity>
-            </View>
+            {this.props.navigation.getParam("isAdmin", false) ? (
+              <View style={{ flexDirection: "row" }}>
+                <TouchableOpacity style={{ padding: 5 }} 
+                  onPress={() => this.props.navigation.navigate('Quiz', { isEditing: true, id: this.state.id })}>
+                  <Icon name="pencil" size={30} />
+                </TouchableOpacity>
+                <TouchableOpacity style={{ marginLeft: 20, padding: 5 }} onPress={() => this.quizDelete()}>
+                  <Icon name="trash" size={30} />
+                </TouchableOpacity>
+              </View>
+            ) : (null)}
           </View>
           <View style={{ width: "90%", margin: 15 }}>
-            <ScrollView style={{ width: "100%", height: "38%" }}>
-              <Text style={{ fontFamily: "PoppinsLight", fontSize: 17 }}>
-                {data.description}
-              </Text>
-            </ScrollView>
+            <Text style={{ fontFamily: "PoppinsLight", fontSize: 17 }}>
+              {this.state.description}
+            </Text>
           </View>
+        </View>
+        <View style={{ alignItems: "center", position: "absolute", width: "100%", height: "100%", flexDirection: "column-reverse" }}>
           <Button
             onPress={() => this.props.navigation.navigate('Lobby', { pin: data.pin, admin: true })}
             title="Play"
@@ -115,7 +154,7 @@ const styles = StyleSheet.create({
   root: {
     flex: 1,
     backgroundColor: "#F9F9F9",
-    padding: 0
+    padding: 0,
   },
   image: {
     width: "100%",
@@ -166,7 +205,7 @@ const styles = StyleSheet.create({
     backgroundColor: "#9B3ADB",
     borderRadius: 10,
     height: 40,
-    marginBottom: 20,
+    marginBottom: 25,
     elevation: 5
   },
   buttonTitle: {

@@ -1,6 +1,7 @@
 import React, { Component } from "react";
-import { StyleSheet, View, Text, StatusBar, ScrollView, Alert } from "react-native";
+import { StyleSheet, View, Text, StatusBar, ScrollView, Alert, TouchableOpacity } from "react-native";
 import { Button } from "react-native-elements";
+import Icon from 'react-native-vector-icons/FontAwesome';
 import ioApi from "../socket";
 
 let io = null;
@@ -23,30 +24,42 @@ export class Lobby extends Component {
     try {
       this.setState({ pin: this.props.navigation.getParam('pin', 0) });
 
-      io = ioApi("game");
+      io = ioApi.connectionsRoom("game");
 
-      if (this.props.navigation.getParam("admin")) io.emit('sendAdmin', this.props.navigation.getParam('pin', 0));
+      if (this.props.navigation.getParam("admin"))
+        io.emit('sendAdmin', this.props.navigation.getParam('pin', 0));
       
       io.on("newUser", data => {
         this.setState({ users: data, userCount: Object.keys(data).length });
       });
 
       io.on("gameStart", () => {
+        
         this.props.navigation.navigate("Play");
       });
+
+      io.on("gameStartError", (data) => {
+        Alert.alert("Error", data)
+      });
     } catch (error) {
-      Alert.alert("Error", error);
+      Alert.alert("Error", "Lobby Screen\n" + error);
     }
   }
 
   componentWillUnmount() {
-    io.removeListener("newUser");
-    io.removeListener("gameStart");
+    try {
+      io.removeListener("newUser");
+      io.removeListener("gameStart");
+      io.removeListener("gameStartError");
+    }
+    catch (error) {
+      Alert.alert("Error", "Lobby Screen WillUnmount\n" + error);
+    }
   }
 
   start() {
     try {
-      io.emit("startGame");
+      io.emit("startGame", this.state.userCount);
     } catch (error) {
       Alert.alert("Error", error);
     }
@@ -62,11 +75,25 @@ export class Lobby extends Component {
     });
   }
 
+  exitButton() {
+    let text;
+    this.props.navigation.getParam("admin", false) ? 
+      (text = "This quiz will be closed if you leave the lobby. Do you want to leave?") : 
+      (text = "Are you sure you want to leave the Lobby?");
+    Alert.alert("", text, [
+      {text: "Cancel"},
+      {text: "Leave", onPress: () => this.props.navigation.navigate('Home')}
+    ])
+  }
+
   render() {
     return (
       <View style={styles.root}>
         <StatusBar backgroundColor="#9B3ADB" barStyle="light-content" />
         <View style={styles.header}>
+          <TouchableOpacity style={styles.exitButton} onPress={() => this.exitButton()}>
+            <Icon name="times" size={35} color="white" />
+          </TouchableOpacity>
           <Text style={styles.pinTitle}>{this.state.pin}</Text>
         </View>
         <ScrollView style={{ width: "100%" }}>
@@ -97,12 +124,17 @@ const styles = StyleSheet.create({
   },
   header: {
     width: "100%",
+    flexDirection: "row",
     backgroundColor: "#9B3ADB",
     height: 60,
     justifyContent: "center",
     alignItems: "center",
     borderBottomLeftRadius: 10,
     borderBottomRightRadius: 10
+  },
+  exitButton: {
+    right: "87%",
+    position: "absolute"
   },
   pinTitle: {
     fontSize: 35,

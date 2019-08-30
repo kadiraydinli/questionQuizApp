@@ -24,13 +24,13 @@ export class Profile extends Component {
     }
 
     _refresh(data) {
-        this.setState({_refresh: data});
+        this.setState({ _refresh: data });
         this.componentDidMount();
     }
 
     async componentDidMount() {
         try {
-            io = ioApi('profile', await AsyncStorage.getItem('token'))
+            io = ioApi.connectionsRoom('profile', await AsyncStorage.getItem('token'))
             io.emit('getProfilInfo');
 
             io.on('setProfilInfo', (data) => {
@@ -80,7 +80,7 @@ export class Profile extends Component {
     myQuizzesRender() {
         return this.state.quizzes.map((data, index) => {
             return (
-                <TouchableOpacity key={index} style={styles.card} onPress={() => this.props.navigation.navigate('Description', { data: data })}>
+                <TouchableOpacity key={index} style={styles.card} onPress={() => this.props.navigation.navigate('Description', { _refresh: this._refresh.bind(this), data: data, isAdmin: true })}>
                     <Image style={styles.cardImage} source={{ uri: global.url + data.img }} />
                     <View style={styles.cardFooter}>
                         <Text style={data.title.length >= 21 ? ({...styles.cardTitle, fontSize: 13}): 
@@ -120,7 +120,7 @@ export class Profile extends Component {
                         <View style={styles.userText}>
                             <Text style={styles.userName}>{this.state.fullName}</Text>
                             <Icon name="pencil" size={25} color="white" style={{ padding: 10 }}
-                                onPress={() => this.props.navigation.navigate('UserEdit', { _refresh: this._refresh.bind(this)})} />
+                                onPress={() => this.props.navigation.navigate('UserEdit', { _refresh: this._refresh.bind(this) })} />
                         </View>
                         <Text style={styles.userNick}>{this.state.userName}</Text>
                     </View>

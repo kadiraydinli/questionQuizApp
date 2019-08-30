@@ -14,7 +14,5 @@ export * from './Description'
 export * from './Play'
 export * from './Scoreboard'
 
-export * from './Create'
-export * from './AddQuestion'
-
-export * from './Dene'
+export * from './Quiz'
+export * from './Question'

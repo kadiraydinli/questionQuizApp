@@ -34,8 +34,8 @@ export class UserEdit extends Component {
 
   async componentDidMount() {
     try {
-      io = ioApi('user');
-      io = ioApi('profile', await AsyncStorage.getItem('token'));
+      io = ioApi.connectionsRoom('user');
+      io = ioApi.connectionsRoom('profile', await AsyncStorage.getItem('token'));
 
       io.emit('getProfileEditInfo');
 
@@ -46,13 +46,11 @@ export class UserEdit extends Component {
           surname: data.lastname,
           username: data.username,
           email: data.email,
-          //password: data.password
         });
       });
 
       io.on('file', (user) => {
         if(this.state.isImageSelected) {
-          alert("hop")
           let url = global.url + "api/upload";
           let body = new FormData();
           body.append("userId", user.userId);
@@ -80,22 +78,28 @@ export class UserEdit extends Component {
         }
       });
 
-      io.on('message', (data) => {
-        Alert.alert(data.message);
+      io.on('errors', (data) => {
+        Alert.alert("Error", data.message);
+      });
+
+      io.on('successfulUpdate', (data) => {
+        Alert.alert("Successful", data.message);
       });
     }
     catch (error) {
-      Alert.alert("Error", JSON.stringify(error));
+      Alert.alert("Error", "UserEdit componentDidMount\n" + JSON.stringify(error));
     }
   }
 
   componentWillUnmount() {
     try {
       io.removeListener('setProfileEditInfo');
-      io.removeListener('message');
+      io.removeListener('successfulUpdate');
+      io.removeListener('errors');
+      io.removeListener('file');
     }
     catch (error) {
-      Alert.alert("Error", JSON.stringify(error));
+      Alert.alert("Error", "UserEdit componentWillUnmount\n" + JSON.stringify(error));
     }
   }
 
@@ -122,7 +126,7 @@ export class UserEdit extends Component {
       }
     }
     catch (error) {
-      Alert.alert("Error", JSON.stringify(error));
+      Alert.alert("Error", "UserEdit send\n" + JSON.stringify(error));
     }
   }
   
@@ -132,7 +136,7 @@ export class UserEdit extends Component {
         <StatusBar backgroundColor="#F9F9F9" barStyle="dark-content" />
         <View style={styles.header}>
           <TouchableOpacity onPress={() => this.goBack()}>
-            <Text style={styles.text}>Cancel</Text>
+            <Text style={styles.text}>Done</Text>
           </TouchableOpacity>
         </View>
         <View style={styles.userImage}>

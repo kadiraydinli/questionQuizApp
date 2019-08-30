@@ -31,9 +31,9 @@ export class EnterPin extends Component {
 
   componentDidMount() {
     try {
-      BackHandler.addEventListener('hardwareBackPress', this.hardwareBackPress);
+      //BackHandler.addEventListener('hardwareBackPress', this.hardwareBackPress);
 
-      io = ioApi('game');
+      io = ioApi.connectionsRoom('game');
       io.on('join', (data) => {
         if (data.status) {
           this.props.navigation.navigate('EnterUserName', { pin: this.state.pin });
@@ -48,7 +48,7 @@ export class EnterPin extends Component {
   }
 
   componentWillUnmount() {
-    BackHandler.removeListener('hardwareBackPress', this.hardwareBackPress)
+    //BackHandler.removeListener('hardwareBackPress', this.hardwareBackPress)
     io.removeListener('join')
   }
 

@@ -19,18 +19,42 @@ export class EnterUserName extends Component {
   }
 
   componentDidMount() {
-    io = ioApi('game');
-    this.backHandler = BackHandler.addEventListener('hardwareBackPress', this.hardwareBackPress);
+    try {
+      io = ioApi.connectionsRoom('game');
+      /*io.on('gameStart', () => {
+        this.setState({ nick: '' });
+        Alert.alert("", "You're late for this test!");
+        this.props.navigation.navigate('Home');
+      });*/
+      io.on('usernameErr', (data) => {
+        Alert.alert("Error", data);
+      });
+      io.on('start', () => {
+        this.setState({ nick: '' });
+        this.props.navigation.navigate('Lobby', { pin: this.props.navigation.getParam('pin', 0), admin: false });
+      })
+
+      this.backHandler = BackHandler.addEventListener('hardwareBackPress', this.hardwareBackPress);
+    }
+    catch (error) {
+      Alert.alert("Error", "EnterUserName componentDidMount\n" + JSON.stringify(error));
+    }
   }
 
   componentWillUnmount() {
+    try {
+      io.removeListener('gameStart');
+      io.removeListener('start');
+      io.removeListener('usernameErr');
+    }
+    catch (error) {
+      Alert.alert("Error", "EnterUserName componentWillUnmount\n" + JSON.stringify(error));
+    }
     this.backHandler.remove()
   }
 
   sendButton() {
     io.emit('sendUsername', this.state.nick);
-    this.setState({ nick: '' });
-    this.props.navigation.navigate('Lobby', { pin: this.props.navigation.getParam('pin', 0), admin: false});
   }
 
   hardwareBackPress = () => {

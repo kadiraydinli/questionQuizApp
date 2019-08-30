@@ -23,7 +23,7 @@ export class SignUp extends Component {
   }
 
   componentDidMount() {
-    io = ioApi('user');
+    io = ioApi.connectionsRoom('user');
 
     io.on('registerSuccessful', (data) => {
       ToastAndroid.show('You will be redirected in 1 second', ToastAndroid.SHORT);
@@ -33,6 +33,17 @@ export class SignUp extends Component {
       Alert.alert("Error", data.message);
     });
   }
+
+  componentWillUnmount() {
+    try {
+      io.removeListener('registerSuccessful')
+      io.removeListener('registerError')
+    }
+    catch (error) {
+      Alert.alert("Error", "SignUp componentWillUnmount\n" + JSON.stringify(error))
+    }
+  }
+
 
   send() {
     io.emit('userRegister',  {

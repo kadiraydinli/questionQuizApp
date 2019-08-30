@@ -30,7 +30,7 @@ export class Login extends Component {
   }
 
   componentDidMount() {
-    io = ioApi('user');
+    io = ioApi.connectionsRoom('user');
 
     io.on('succLogin', (token) => {
       this._setTokenStorage(token);
@@ -43,8 +43,13 @@ export class Login extends Component {
   }
   
   componentWillUnmount() {
-    io.removeListener('succLogin')
-    io.removeListener('loginErr')
+    try {
+      io.removeListener('succLogin')
+      io.removeListener('loginErr')
+    }
+    catch (error) {
+      Alert.alert("Error", "Login componentWillUnmount\n" + JSON.stringify(error))
+    }
   }
 
   loginButton() {

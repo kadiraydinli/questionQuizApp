@@ -11,7 +11,6 @@ import {
 } from "react-native";
 import AsyncStorage from "@react-native-community/async-storage";
 import Icon from "react-native-vector-icons/FontAwesome5";
-import { Input } from "react-native-elements";
 import ioApi from "../socket";
 
 let io = null;
@@ -37,9 +36,9 @@ export class Discover extends Component {
 
   async componentDidMount() {
     try {
-      io = ioApi("profile", await AsyncStorage.getItem("token"));
+      io = ioApi.connectionsRoom("profile", await AsyncStorage.getItem("token"));
       io.emit("getDiscover");
-      io.on("setDiscoverTrend", data => {
+      io.on("setDiscover", data => {
         this.setState({ quizzesTrend: data });
       });
       io.on("setDiscoverMyQuiz", data => {
@@ -59,10 +58,10 @@ export class Discover extends Component {
     }
   }
 
-  trendsRender() {
+  discoverRender() {
     return this.state.quizzesTrend.map((data, index) => {
       return (
-        <TouchableOpacity key={index} onPress={() => this.props.navigation.navigate("Description", { _refresh: this._refresh.bind(this), data: data })}
+        <TouchableOpacity key={index} onPress={() => this.props.navigation.navigate("Description", { _refresh: this._refresh.bind(this), data: data, isAdmin: false })}
           style={styles.card}>
           <Image style={styles.cardImage} source={{ uri: global.url + data.img }} />
           <View style={styles.cardFooter}>
@@ -70,7 +69,11 @@ export class Discover extends Component {
               <Text style={styles.cardNick}>{data.username}</Text>
               <Image style={styles.cardUserImage} source={{ uri: global.url + data.userImg }} />
             </View>
-            <Text style={styles.cardTitle}>{data.title}</Text>
+            <Text style={data.title.length >= 21 ? ({ ...styles.cardTitle, fontSize: 13 }) :
+              (data.title.length >= 13 ? ({ ...styles.cardTitle, fontSize: 14 }) : 
+              (styles.miniCardTitle))}
+            >
+              {data.title}</Text>
             <Text style={{ fontFamily: "PoppinsLight" }}>
               {data.questionCount} Questions
             </Text>
@@ -83,7 +86,7 @@ export class Discover extends Component {
   myQuizzesRender() {
     return this.state.myQuizzes.map((data, index) => {
       return (
-        <TouchableOpacity key={index} onPress={() => this.props.navigation.navigate("Description", { data: data })} style={styles.miniCard}>
+        <TouchableOpacity key={index} onPress={() => this.props.navigation.navigate("Description", { _refresh: this._refresh.bind(this), data: data, isAdmin: true })} style={styles.miniCard}>
           <Image style={styles.miniCardImage} source={{ uri: global.url + data.img }} />
           <View style={styles.miniCardFooter}>
             <Text style={data.title.length >= 21 ? ({...styles.miniCardTitle, fontSize: 13}): 
@@ -103,29 +106,13 @@ export class Discover extends Component {
     return (
       <View style={styles.root}>
         <StatusBar backgroundColor="#F9F9F9" barStyle="dark-content" />
-        <View style={{ width: "90%", alignSelf: "center" }}>
-          <Input
-            placeholder="Ara"
-            containerStyle={styles.searchInput}
-            inputContainerStyle={{ borderBottomWidth: 0 }}
-            inputStyle={styles.inputStyle}
-            leftIconContainerStyle={styles.inputIcon}
-            shake={true}
-            leftIcon={<Icon name="search" size={25} color="#D8D8D8" />}
-          />
-        </View>
-        <View style={styles.trendingsView}>
-          <View style={styles.trendingsHeadline}>
-            <Text style={styles.trendingsHeadlineText}>Trendings</Text>
-            <TouchableOpacity>
-              <Text style={{ ...styles.trendingsHeadlineText, fontSize: 15 }}>
-                See All
-              </Text>
-            </TouchableOpacity>
+        <View style={styles.discoverView}>
+          <View style={styles.discoverHeadline}>
+            <Text style={styles.discoverHeadlineText}>Discover</Text>
           </View>
           <View style={{ paddingLeft: 20, width: "95%" }}>
             <ScrollView horizontal showsHorizontalScrollIndicator={false} style={styles.myQuizzes}>
-              {this.trendsRender()}
+              {this.discoverRender()}
             </ScrollView>
           </View>
         </View>
@@ -138,19 +125,19 @@ export class Discover extends Component {
           </View>
         </View>
         <View style={styles.footerView}>
-          <TouchableOpacity onPress={() => this.props.navigation.navigate("Discover")}>
+          <TouchableOpacity style={{ padding: 5 }} onPress={() => this.props.navigation.navigate("Discover")}>
             <Icon name="compass" size={30} color="#6520A0" />
           </TouchableOpacity>
-          <TouchableOpacity onPress={() => this.props.navigation.navigate("Create")}>
+          <TouchableOpacity style={{ padding: 5 }} onPress={() => this.props.navigation.navigate("Quiz", { isEditing: false })}>
             <Icon name="plus-square" size={30} color="#D4D3D3" />
           </TouchableOpacity>
-          <TouchableOpacity onPress={() => this.props.navigation.goBack()}>
-            <Image style={styles.footerHome} source={require("../assets/icon/home.png")} />
+          <TouchableOpacity onPress={() => this.props.navigation.navigate('EnterPin')}>
+            <Image style={styles.footerHome} source={require('../assets/icon/homeActive.png')} />
           </TouchableOpacity>
-          <TouchableOpacity>
+          <TouchableOpacity style={{ padding: 5 }}>
             <Icon name="star" size={30} color="#D4D3D3" />
           </TouchableOpacity>
-          <TouchableOpacity onPress={() => this.props.navigation.navigate("Profile")}>
+          <TouchableOpacity style={{ padding: 5 }} onPress={() => this.props.navigation.navigate("Profile")}>
             <Icon name="user" size={30} color="#D4D3D3" />
           </TouchableOpacity>
         </View>
@@ -165,35 +152,22 @@ const styles = StyleSheet.create({
     backgroundColor: "#F9F9F9",
     justifyContent: "space-between"
   },
-  searchInput: {
-    backgroundColor: "white",
-    elevation: 5,
-    borderRadius: 30,
-    marginTop: "5%"
-  },
-  inputStyle: {
-    fontFamily: "PoppinsMedium"
-  },
-  inputIcon: {
-    marginLeft: 5,
-    marginRight: 5
-  },
-  trendingsView: {
+  discoverView: {
     width: "87%",
     height: "45%",
-    marginTop: "7%",
+    marginTop: "10%",
     backgroundColor: "#9B3ADB",
     borderBottomRightRadius: 61,
     borderTopRightRadius: 61
   },
-  trendingsHeadline: {
+  discoverHeadline: {
     flexDirection: "row",
     padding: 25,
     paddingBottom: 10,
     alignItems: "center",
     justifyContent: "space-between"
   },
-  trendingsHeadlineText: {
+  discoverHeadlineText: {
     color: "white",
     fontFamily: "PoppinsMedium",
     fontSize: 25
@@ -201,14 +175,15 @@ const styles = StyleSheet.create({
   myQuizzes: {
     alignSelf: "center",
     flexDirection: "row",
-    margin: 5
+    margin: 5,
   },
   card: {
     width: 140,
     height: 200,
     borderRadius: 10,
     marginRight: 25,
-    backgroundColor: "#DCDCDC"
+    backgroundColor: "#DCDCDC",
+    flexDirection: "column-reverse"
   },
   cardImage: {
     width: 140,
@@ -223,7 +198,6 @@ const styles = StyleSheet.create({
     justifyContent: "space-between",
     height: "40%",
     borderRadius: 9,
-    top: "60%"
   },
   cardUser: {
     flexDirection: "row",
@@ -246,29 +220,31 @@ const styles = StyleSheet.create({
   topPicsView: {
     flex: 1,
     alignSelf: "center",
-    padding: 20
+    padding: 20,
+    paddingTop: 25,
+    paddingBottom: 25
   },
   topPicsTitle: {
-    fontSize: 20,
+    fontSize: 23,
     fontFamily: "PoppinsSemiBold",
-    bottom: "4%"
+    paddingBottom: "4%"
   },
   miniCard: {
     width: 160,
-    height: 130,
+    height: 150,
     borderRadius: 10,
     marginRight: 20,
-    backgroundColor: "#DCDCDC"
+    backgroundColor: "#DCDCDC",
+    flexDirection: "column-reverse",
   },
   miniCardImage: {
     width: 160,
-    height: 130,
+    height: 150,
     borderRadius: 10
   },
   miniCardFooter: {
     width: "100%",
     height: 52,
-    top: "60%",
     paddingLeft: 7,
     paddingBottom: 2,
     paddingTop: 2,
